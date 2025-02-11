@@ -82,6 +82,12 @@
         .drag-over-column .drop-zone::before {
             opacity: 1;
         }
+
+        .dragging-board {
+            border: 2px dashed #3b82f6; /* Dotted border color */
+            background-color: rgba(59, 130, 246, 0.1); /* Light background color for feedback */
+            transition: border 0.2s ease; /* Smooth transition */
+        }
     </style>
 </head>
 <body class="bg-gray-100 min-h-screen flex flex-col items-center">
@@ -95,6 +101,11 @@
                 class="bg-gray-100 hover:bg-gray-200 text-gray-600 p-3 rounded-full shadow-lg transition-all"
                 title="Duplicate Board">
             <i class="fas fa-copy text-sm"></i>
+        </button>
+        <button onclick="deleteBoard()"
+                class="bg-red-100 hover:bg-red-200 text-red-600 p-3 rounded-full shadow-lg transition-all"
+                title="Delete Board">
+            <i class="fas fa-trash-alt text-sm"></i>
         </button>
         <button id="importBtn"
                 class="bg-gray-100 hover:bg-gray-200 text-gray-600 p-3 rounded-full shadow-lg transition-all"

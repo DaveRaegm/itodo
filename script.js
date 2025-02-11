@@ -15,6 +15,37 @@
         }
     });
 
+    const boardsContainer = document.getElementById('boards-container');
+
+    boardsContainer.addEventListener('dragover', (event) => {
+        event.preventDefault(); // Allow dropping
+    });
+
+    boardsContainer.addEventListener('drop', (event) => {
+        event.preventDefault();
+        const draggedBoardId = event.dataTransfer.getData('text/plain');
+        const draggedBoard = document.getElementById(draggedBoardId);
+
+        if (draggedBoard) {
+            // Determine where to insert the dragged board
+            const boards = Array.from(boardsContainer.children);
+            const dropPosition = event.clientY;
+
+            for (let i = 0; i < boards.length; i++) {
+                const board = boards[i];
+                const boardRect = board.getBoundingClientRect();
+                if (dropPosition < boardRect.top + boardRect.height / 2) {
+                    boardsContainer.insertBefore(draggedBoard, board);
+                    break;
+                } else if (i === boards.length - 1) {
+                    boardsContainer.appendChild(draggedBoard);
+                }
+            }
+            saveTasks(); // Save the new order
+        }
+    });
+
+
     // Board management
     window.duplicateBoard = function() {
         createBoard(`board-${boardCounter}`);
@@ -22,9 +53,64 @@
         saveTasks();
     };
 
+    window.deleteBoard = function() {
+        const boards = document.querySelectorAll('.kanban-board');
+        if (boards.length === 0) {
+            alert('No boards to delete.');
+            return;
+        }
+
+        const lastBoard = boards[boards.length - 1];
+        if (confirm('Are you sure you want to delete this board?')) {
+            lastBoard.remove();
+            boardCounter--;
+            saveTasks();
+        }
+    };
+
+   // Create Board
     function createBoard(boardId) {
         const board = document.createElement('div');
         board.className = 'flex space-x-4 kanban-board';
+        board.setAttribute('draggable', true); // Make the board draggable
+        board.id = boardId; // Set the ID for the board
+
+        // Add drag event listeners
+        board.addEventListener('dragstart', (event) => {
+            event.dataTransfer.setData('text/plain', boardId); // Store the board ID
+            setTimeout(() => {
+                board.classList.add('opacity-50'); // Optional: Add visual feedback
+                board.classList.add('dragging-board'); // Add dragging class
+            }, 0);
+        });
+
+        board.addEventListener('dragend', () => {
+            board.classList.remove('opacity-50'); // Remove visual feedback
+            board.classList.remove('dragging-board'); // Remove dragging class
+        });
+
+        // Add drop event listener to the board itself (optional)
+        board.addEventListener('dragover', (event) => {
+            event.preventDefault(); // Allow dropping
+        });
+
+        board.addEventListener('drop', (event) => {
+            event.preventDefault();
+            const draggedBoardId = event.dataTransfer.getData('text/plain');
+            const draggedBoard = document.getElementById(draggedBoardId);
+
+            if (draggedBoard && draggedBoard !== board) {
+                // Insert the dragged board before or after the current board
+                const boardsContainer = document.getElementById('boards-container');
+                if (event.clientY < board.getBoundingClientRect().top + board.offsetHeight / 2) {
+                    boardsContainer.insertBefore(draggedBoard, board);
+                } else {
+                    boardsContainer.insertBefore(draggedBoard, board.nextSibling);
+                }
+                saveTasks(); // Save the new order
+            }
+        });
+
         board.innerHTML = `
             <section class="bg-white rounded-lg shadow-lg p-4 w-80 border-2 border-transparent transition-all"
                      id="${boardId}-backlog"
